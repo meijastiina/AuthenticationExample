@@ -8,28 +8,38 @@ const JWTStrategy = require('passport-jwt').Strategy,
     ExtractJWT = require('passport-jwt').ExtractJwt;
 
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 // Hard coded array of users
 const users = [
     {
         id: 1,
         username: "John",
-        password: "password"
+        password: securePassword("password")
     },
     {
         id: 2,
         username: "Jane",
-        password: "SecretPassword"
+        password: securePassword("SecretPassword")
     }
 ];
 
+// Function to hash passwords
+function securePassword(password) {
+    // Generate salt
+    let salt = bcrypt.genSaltSync(6);
+    // Generate hash
+    let hash = bcrypt.hashSync(password, salt);
+    // Return hashed+salted password
+    return hash;
+}
 passport.use(new BasicStrategy(
     function(username, password, done) {
         // Check credentials
         // Find user from users array
         const user = users.find( user => user.username === username );
         // If the user exists
-        if ( user != null && user.password === password ) {
+        if ( user != null && bcrypt.compareSync(password, user.password) ) {
             // login ok
             done(null, user);
         } else {
